@@ -4,13 +4,17 @@ services:
       context: .
     container_name: gmb_app
     platform: linux/amd64
+    restart: unless-stopped
     working_dir: /var/www
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./src:/var/www
     depends_on:
-      - gmb_db
+      gmb_db:
+        condition: service_healthy
+      gmb_cache:
+        condition: service_healthy
     ports:
       - "8088:80"
     networks:
@@ -21,6 +25,7 @@ services:
     container_name: gmb_db
     hostname: gmb_db
     platform: linux/amd64
+    restart: unless-stopped
     volumes:
       - gmb_db:/var/lib/mysql
     environment:
@@ -31,17 +36,28 @@ services:
       MYSQL_PASSWORD: "deployer"
       MYSQL_ALLOW_EMPTY_PASSWORD: 1
       MYSQL_TCP_PORT: 33061
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     ports:
       - "33061:3306"
     networks:
       - gmb_network
 
   gmb_cache:
-    image: memcached:latest
+    image: memcached:1.6-alpine
     container_name: gmb_cache
     hostname: gmb_cache
     platform: linux/amd64
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo stats | nc -w 1 localhost 11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     ports:
       - "11222:11211"
     networks:
