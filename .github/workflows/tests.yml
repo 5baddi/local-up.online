@@ -4,12 +4,11 @@ on:
   push:
     branches:
       - main
-      - master
-      - 'claude/**'
   pull_request:
     branches:
       - main
-      - master
+    types:
+      - ready_for_review
 
 jobs:
   test:
