@@ -63,6 +63,13 @@
       0 => 'Onecentlin\\Adminer\\ServiceProvider',
     ),
   ),
+  'pestphp/pest-plugin-laravel' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Pest\\Laravel\\PestServiceProvider',
+    ),
+  ),
   'propaganistas/laravel-phone' => 
   array (
     'providers' => 
