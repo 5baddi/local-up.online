@@ -1,56 +1,24 @@
 <?php return array (
   'creativeorange/gravatar' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Creativeorange\\Gravatar\\GravatarServiceProvider',
-    ),
     'aliases' => 
     array (
       'Gravatar' => 'Creativeorange\\Gravatar\\Facades\\Gravatar',
     ),
-  ),
-  'facade/ignition' => 
-  array (
     'providers' => 
     array (
-      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
-    ),
-    'aliases' => 
-    array (
-      'Flare' => 'Facade\\Ignition\\Facades\\Flare',
-    ),
-  ),
-  'fideloper/proxy' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Fideloper\\Proxy\\TrustedProxyServiceProvider',
-    ),
-  ),
-  'fruitcake/laravel-cors' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Fruitcake\\Cors\\CorsServiceProvider',
-    ),
-  ),
-  'imliam/laravel-env-set-command' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'ImLiam\\EnvironmentSetCommand\\EnvironmentSetCommandServiceProvider',
+      0 => 'Creativeorange\\Gravatar\\GravatarServiceProvider',
     ),
   ),
   'jenssegers/agent' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Jenssegers\\Agent\\AgentServiceProvider',
-    ),
     'aliases' => 
     array (
       'Agent' => 'Jenssegers\\Agent\\Facades\\Agent',
+    ),
+    'providers' => 
+    array (
+      0 => 'Jenssegers\\Agent\\AgentServiceProvider',
     ),
   ),
   'laravel/sail' => 
@@ -81,6 +49,13 @@
       0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     ),
   ),
+  'nunomaduro/termwind' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Termwind\\Laravel\\TermwindServiceProvider',
+    ),
+  ),
   'onecentlin/laravel-adminer' => 
   array (
     'providers' => 
@@ -95,15 +70,26 @@
       0 => 'Propaganistas\\LaravelPhone\\PhoneServiceProvider',
     ),
   ),
-  'stevebauman/location' => 
+  'spatie/laravel-ignition' => 
   array (
+    'aliases' => 
+    array (
+      'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
     'providers' => 
     array (
-      0 => 'Stevebauman\\Location\\LocationServiceProvider',
+      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
+  ),
+  'stevebauman/location' => 
+  array (
     'aliases' => 
     array (
       'Location' => 'Stevebauman\\Location\\Facades\\Location',
+    ),
+    'providers' => 
+    array (
+      0 => 'Stevebauman\\Location\\LocationServiceProvider',
     ),
   ),
 );
