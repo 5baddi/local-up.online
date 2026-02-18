@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use BADDIServices\ClnkGO\Models\Authenticatable;
@@ -14,7 +15,7 @@ use BADDIServices\ClnkGO\Models\UserGoogleCredentials;
  */
 class User extends Authenticatable
 {
-    use Notifiable, Filterable;
+    use HasFactory, Notifiable, Filterable;
 
     public const string EMAIL_COLUMN = 'email';
     public const string LAST_NAME_COLUMN = 'last_name';

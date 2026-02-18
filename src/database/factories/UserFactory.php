@@ -4,44 +4,45 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
     protected $model = User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array
-     */
-    public function definition()
+    public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            'remember_token' => Str::random(10),
+            'first_name'         => $this->faker->firstName(),
+            'last_name'          => $this->faker->lastName(),
+            'email'              => $this->faker->unique()->safeEmail(),
+            'password'           => bcrypt('password'),
+            'phone'              => $this->faker->numerify('##########'),
+            'role'               => User::DEFAULT_ROLE,
+            'is_superadmin'      => false,
+            'banned'             => false,
+            'verified_at'        => now(),
+            'confirmation_token' => null,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
-     */
-    public function unverified()
+    public function unverified(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'email_verified_at' => null,
-            ];
-        });
+        return $this->state(fn () => [
+            'verified_at'        => null,
+            'confirmation_token' => $this->faker->uuid(),
+        ]);
+    }
+
+    public function banned(): static
+    {
+        return $this->state(fn () => ['banned' => true]);
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn () => [
+            'is_superadmin' => true,
+            'role'          => null,
+        ]);
     }
 }
