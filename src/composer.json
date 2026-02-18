@@ -1,5 +1,5 @@
 {
-    "name": "baddiservices/social-rocket",
+    "name": "5baddi/local-up.online",
     "type": "project",
     "description": "Easy tools to shape your affiliate program.",
     "keywords": ["tool", "shopify", "affiliate"],
@@ -12,7 +12,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "2checkout/2checkout-php": "^0.4.0",
         "baddiservices/safehtml": "^0.0.6",
         "bugsnag/bugsnag-laravel": "^2.0",
@@ -88,7 +88,7 @@
             "pestphp/pest-plugin": true
         },
         "platform": {
-            "php": "8.2.0"
+            "php": "8.4.0"
         }
     },
     "minimum-stability": "dev",
