@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use BADDIServices\ClnkGO\AppLogger;
 use BADDIServices\ClnkGO\Helpers\EmojiParser;
 
 /**
@@ -75,7 +76,7 @@ if (! function_exists('extractDate')) {
 
             return null;
         } catch (Throwable $e) {
-            // TODO: implement logger
+            AppLogger::error($e, 'helpers:extract-date', ['text' => $text]);
         }
 
         return null;

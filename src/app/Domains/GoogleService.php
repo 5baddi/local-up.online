@@ -138,7 +138,9 @@ class GoogleService extends Service
             if (! empty($userCredentials->getAccessToken())) {
                 $this->client->revokeToken($userCredentials->getAccessToken());
             }
-        } catch (Throwable) {}
+        } catch (Throwable $e) {
+            AppLogger::error($e, 'google:revoke-access-token', $userCredentials->toArray());
+        }
 
         $this->userRepository->deleteGoogleCredentials($userCredentials->getUserId());
     }
@@ -148,7 +150,17 @@ class GoogleService extends Service
         $this->client = new client();
 
         try {
-            $this->client->setAuthConfig(config_path('google.json'));
+            $this->client->setAuthConfig([
+                'web' => [
+                    'client_id'                   => config('google.client_id'),
+                    'project_id'                  => config('google.project_id'),
+                    'client_secret'               => config('google.client_secret'),
+                    'auth_uri'                    => config('google.auth_uri'),
+                    'token_uri'                   => config('google.token_uri'),
+                    'auth_provider_x509_cert_url' => config('google.auth_provider_x509_cert_url'),
+                    'redirect_uris'               => config('google.redirect_uris'),
+                ],
+            ]);
             $this->client->setApprovalPrompt('force');
             $this->client->setAccessType('offline');
             $this->client->setIncludeGrantedScopes(true);
@@ -161,6 +173,8 @@ class GoogleService extends Service
                 self::MANAGE_BUSINESS_SCOPE,
                 self::MANAGE_BUSINESS_PLUS_SCOPE,
             ]);
-        } catch (Exception) {}
+        } catch (Exception $e) {
+            AppLogger::error($e, 'google:configure');
+        }
     }
 }

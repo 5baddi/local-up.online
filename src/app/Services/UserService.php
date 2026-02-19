@@ -112,7 +112,7 @@ class UserService
         }
 
         if (! Arr::has($attributes, User::CONFIRMATION_TOKEN_COLUMN)) {
-            Arr::set($attributes,  User::CONFIRMATION_TOKEN_COLUMN, Str::substr(md5($attributes[User::EMAIL_COLUMN]), 0, 60));
+            Arr::set($attributes, User::CONFIRMATION_TOKEN_COLUMN, Str::random(60));
         }
 
         $attributes[User::PASSWORD_COLUMN] = Hash::make($attributes[User::PASSWORD_COLUMN]);
