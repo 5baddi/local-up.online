@@ -1,0 +1,75 @@
+@keyframes hidePreloader {
+    0% {
+        width: 100%;
+        height: 100%;
+    }
+
+    100% {
+        width: 0;
+        height: 0;
+    }
+}
+
+body>div.preloader {
+    position: fixed;
+    background: white;
+    width: 100%;
+    height: 100%;
+    z-index: 1071;
+    opacity: 0;
+    transition: opacity .5s ease;
+    overflow: hidden;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body:not(.loaded)>div.preloader {
+    opacity: 1;
+}
+
+body:not(.loaded) {
+    overflow: hidden;
+}
+
+body.loaded>div.preloader {
+    animation: hidePreloader .5s linear .5s forwards;
+}
+
+.footer-logo {
+    max-width: 200px;
+    height: auto;
+}
+
+.card-pricing ul{
+    text-align: start !important;
+}
+.card-pricing ul li { 
+    position: relative;
+    padding: .5rem 0;
+}
+.card-pricing ul li:after {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    position: absolute;
+    right: 0;
+    background-image: url("../img/check.svg");
+    top: 6px;
+    background-size: 24px;
+    background-repeat: no-repeat;
+}
+.uncheck:after {
+    width: 18px !important;
+    height: 18px !important;
+    background-size: 18px !important;
+    background-image: url("../img/uncheck.svg") !important;
+}
+
+hr {
+    margin-top: 1rem !important;
+    margin-bottom: 0 !important;
+    opacity: .5;
+}
