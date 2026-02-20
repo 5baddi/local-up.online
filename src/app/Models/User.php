@@ -27,7 +27,7 @@ class User extends Authenticatable
     public const string LAST_LOGIN_COLUMN = 'last_login';
     public const string VERIFIED_AT_COLUMN = 'verified_at';
     public const string CONFIRMATION_TOKEN_COLUMN = 'confirmation_token';
-    public const string REMEMBER_TOLEN_COLUMN = 'remember_token';
+    public const string REMEMBER_TOKEN_COLUMN = 'remember_token';
     public const string ROLE_COLUMN = 'role';
     public const string IS_SUPERADMIN_COLUMN = 'is_superadmin';
     public const string BANNED_COLUMN = 'banned';
@@ -44,7 +44,7 @@ class User extends Authenticatable
     /** @var array */
     protected $hidden = [
         self::PASSWORD_COLUMN,
-        self::REMEMBER_TOLEN_COLUMN,
+        self::REMEMBER_TOKEN_COLUMN,
     ];
 
     /** @var array */
