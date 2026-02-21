@@ -31,12 +31,15 @@ readonly class GoogleBusinessLocalPostObjectValue
 
     public static function fromArray(array $attributes): self
     {
-        $attributes[ScheduledPost::TOPIC_TYPE_COLUMN] = $attributes[ScheduledPost::TOPIC_TYPE_COLUMN] ?? ScheduledPost::STANDARD_TYPE;
+        $rawTopicType = $attributes[ScheduledPost::TOPIC_TYPE_COLUMN] ?? ScheduledPost::STANDARD_TYPE;
+        $topicType = ScheduledPost::TYPES[$rawTopicType] ?? 'STANDARD';
+
         $attributes[ScheduledPost::LANGUAGE_CODE_COLUMN] = $attributes[ScheduledPost::LANGUAGE_CODE_COLUMN] ?? ScheduledPost::DEFAULT_LANGUAGE_CODE;
         $attributes[ScheduledPost::SUMMARY_COLUMN] = $attributes[ScheduledPost::SUMMARY_COLUMN] ?? '';
 
+        $rawActionType = $attributes[ScheduledPost::ACTION_TYPE_COLUMN] ?? ScheduledPost::LEARN_MORE_ACTION_TYPE;
         $callToAction = [
-            'actionType' => $attributes[ScheduledPost::ACTION_TYPE_COLUMN]
+            'actionType' => ScheduledPost::ACTION_TYPES[$rawActionType]
                 ?? ScheduledPost::ACTION_TYPES[ScheduledPost::LEARN_MORE_ACTION_TYPE],
         ];
 
@@ -45,13 +48,14 @@ readonly class GoogleBusinessLocalPostObjectValue
         }
 
         $alertType = null;
-        if ($attributes[ScheduledPost::TOPIC_TYPE_COLUMN] === ScheduledPost::ALERT_TYPE) {
-            $alertType = $attributes[ScheduledPost::ALERT_TYPE_COLUMN] ?? ScheduledPost::UNSPECIFIED_ALERT_TYPE;
+        if ($rawTopicType === ScheduledPost::ALERT_TYPE) {
+            $rawAlertType = $attributes[ScheduledPost::ALERT_TYPE_COLUMN] ?? ScheduledPost::UNSPECIFIED_ALERT_TYPE;
+            $alertType = ScheduledPost::ALERT_TYPES[$rawAlertType] ?? 'ALERT_TYPE_UNSPECIFIED';
         }
 
         $event = [];
         if (
-            $attributes[ScheduledPost::TOPIC_TYPE_COLUMN] === ScheduledPost::EVENT_TYPE
+            $rawTopicType === ScheduledPost::EVENT_TYPE
             && ! empty($attributes[ScheduledPost::EVENT_START_DATETIME_COLUMN])
             && ! empty($attributes[ScheduledPost::EVENT_END_DATETIME_COLUMN])
         ) {
@@ -88,7 +92,7 @@ readonly class GoogleBusinessLocalPostObjectValue
         }
 
         $offer = [];
-        if ($attributes[ScheduledPost::TOPIC_TYPE_COLUMN] === ScheduledPost::OFFER_TYPE) {
+        if ($rawTopicType === ScheduledPost::OFFER_TYPE) {
             $offer = [
                 'couponCode'        => $attributes[ScheduledPost::OFFER_COUPON_CODE_COLUMN] ?? '',
                 'redeemOnlineUrl'   => $attributes[ScheduledPost::OFFER_REDEEM_ONLINE_URL_COLUMN] ?? '',
@@ -104,7 +108,7 @@ readonly class GoogleBusinessLocalPostObjectValue
             $event,
             $offer,
             $media,
-            $attributes[ScheduledPost::TOPIC_TYPE_COLUMN],
+            $topicType,
             $attributes[ScheduledPost::LANGUAGE_CODE_COLUMN],
             $alertType
         );

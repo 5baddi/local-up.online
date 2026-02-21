@@ -159,7 +159,6 @@ class GoogleService extends Service
                 Oauth2::USERINFO_EMAIL,
                 Oauth2::OPENID,
                 self::MANAGE_BUSINESS_SCOPE,
-                self::MANAGE_BUSINESS_PLUS_SCOPE,
             ]);
         } catch (Exception) {}
     }
