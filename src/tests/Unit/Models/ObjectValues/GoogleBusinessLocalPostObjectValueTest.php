@@ -295,3 +295,106 @@ describe('GoogleBusinessLocalPostObjectValue::fromArray() – media', function (
         expect($value->toArray())->not->toHaveKey('media');
     });
 });
+
+// ---------------------------------------------------------------------------
+// fromArray() – normalization: controller stores uppercase API values in DB
+//
+// SaveScheduledPostController persists ScheduledPost::TYPES[$type] which
+// produces uppercase strings ('STANDARD', 'EVENT', 'OFFER', 'ALERT') and
+// similarly stores 'LEARN_MORE', 'CALL', 'COVID_19', etc.
+// fromArray() must produce correct GMB payloads from these values.
+// ---------------------------------------------------------------------------
+
+describe('GoogleBusinessLocalPostObjectValue::fromArray() – uppercase DB values (from controller)', function () {
+    it('correctly maps uppercase STANDARD topicType stored by the controller', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN   => 'STANDARD',   // as stored by controller
+            ScheduledPost::SUMMARY_COLUMN      => 'Hello',
+            ScheduledPost::ACTION_TYPE_COLUMN  => 'LEARN_MORE', // as stored by controller
+            ScheduledPost::ACTION_URL_COLUMN   => 'https://example.com',
+            ScheduledPost::LANGUAGE_CODE_COLUMN => 'en-US',
+        ]);
+
+        $array = $value->toArray();
+
+        expect($array['topicType'])->toBe('STANDARD');
+        expect($array['callToAction']['actionType'])->toBe('LEARN_MORE');
+    });
+
+    it('correctly maps uppercase EVENT topicType and builds event schedule', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN           => 'EVENT',
+            ScheduledPost::SUMMARY_COLUMN              => 'Grand opening',
+            ScheduledPost::EVENT_TITLE_COLUMN          => 'Grand Opening',
+            ScheduledPost::ACTION_TYPE_COLUMN          => 'LEARN_MORE',
+            ScheduledPost::ACTION_URL_COLUMN           => 'https://example.com',
+            ScheduledPost::EVENT_START_DATETIME_COLUMN => '2025-12-25 10:00:00',
+            ScheduledPost::EVENT_END_DATETIME_COLUMN   => '2025-12-25 18:00:00',
+        ]);
+
+        $array = $value->toArray();
+
+        expect($array['topicType'])->toBe('EVENT');
+        expect($array)->toHaveKey('event');
+        expect($array['event']['title'])->toBe('Grand Opening');
+    });
+
+    it('correctly maps uppercase OFFER topicType and builds offer structure', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN              => 'OFFER',
+            ScheduledPost::SUMMARY_COLUMN                 => '20% off',
+            ScheduledPost::ACTION_TYPE_COLUMN             => 'GET_OFFER',
+            ScheduledPost::ACTION_URL_COLUMN              => 'https://shop.example.com',
+            ScheduledPost::OFFER_COUPON_CODE_COLUMN        => 'SAVE20',
+            ScheduledPost::OFFER_REDEEM_ONLINE_URL_COLUMN  => 'https://redeem.example.com',
+            ScheduledPost::OFFER_TERMS_CONDITIONS_COLUMN   => 'Valid until Dec 31',
+        ]);
+
+        $array = $value->toArray();
+
+        expect($array['topicType'])->toBe('OFFER');
+        expect($array)->toHaveKey('offer');
+        expect($array['offer']['couponCode'])->toBe('SAVE20');
+        expect($array['callToAction']['actionType'])->toBe('GET_OFFER');
+    });
+
+    it('correctly maps uppercase ALERT topicType with COVID_19 alertType', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN => 'ALERT',
+            ScheduledPost::SUMMARY_COLUMN    => 'COVID update',
+            ScheduledPost::ALERT_TYPE_COLUMN => 'COVID_19', // as stored by controller
+            ScheduledPost::ACTION_TYPE_COLUMN => 'LEARN_MORE',
+            ScheduledPost::ACTION_URL_COLUMN  => 'https://example.com',
+        ]);
+
+        $array = $value->toArray();
+
+        expect($array['topicType'])->toBe('ALERT');
+        expect($array['alertType'])->toBe('COVID_19');
+    });
+
+    it('correctly maps uppercase ALERT topicType with ALERT_TYPE_UNSPECIFIED', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN => 'ALERT',
+            ScheduledPost::SUMMARY_COLUMN    => 'General alert',
+            ScheduledPost::ALERT_TYPE_COLUMN => 'ALERT_TYPE_UNSPECIFIED', // as stored by controller
+            ScheduledPost::ACTION_TYPE_COLUMN => 'LEARN_MORE',
+            ScheduledPost::ACTION_URL_COLUMN  => 'https://example.com',
+        ]);
+
+        expect($value->toArray()['alertType'])->toBe('ALERT_TYPE_UNSPECIFIED');
+    });
+
+    it('does not add url to callToAction when CALL actionType is stored by the controller', function () {
+        $value = GoogleBusinessLocalPostObjectValue::fromArray([
+            ScheduledPost::TOPIC_TYPE_COLUMN  => 'STANDARD',
+            ScheduledPost::SUMMARY_COLUMN     => 'Call us',
+            ScheduledPost::ACTION_TYPE_COLUMN => 'CALL', // uppercase, as stored by controller
+        ]);
+
+        $callToAction = $value->toArray()['callToAction'];
+
+        expect($callToAction['actionType'])->toBe('CALL');
+        expect($callToAction)->not->toHaveKey('url');
+    });
+});

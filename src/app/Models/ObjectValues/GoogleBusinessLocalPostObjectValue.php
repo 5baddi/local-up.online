@@ -31,15 +31,19 @@ readonly class GoogleBusinessLocalPostObjectValue
 
     public static function fromArray(array $attributes): self
     {
+        // Normalize to lowercase so lookups work whether the DB stored lowercase
+        // ('standard') or the controller-stored uppercase API value ('STANDARD').
         $rawTopicType = $attributes[ScheduledPost::TOPIC_TYPE_COLUMN] ?? ScheduledPost::STANDARD_TYPE;
-        $topicType = ScheduledPost::TYPES[$rawTopicType] ?? 'STANDARD';
+        $normalizedTopicType = strtolower($rawTopicType);
+        $topicType = ScheduledPost::TYPES[$normalizedTopicType] ?? 'STANDARD';
 
         $attributes[ScheduledPost::LANGUAGE_CODE_COLUMN] = $attributes[ScheduledPost::LANGUAGE_CODE_COLUMN] ?? ScheduledPost::DEFAULT_LANGUAGE_CODE;
         $attributes[ScheduledPost::SUMMARY_COLUMN] = $attributes[ScheduledPost::SUMMARY_COLUMN] ?? '';
 
         $rawActionType = $attributes[ScheduledPost::ACTION_TYPE_COLUMN] ?? ScheduledPost::LEARN_MORE_ACTION_TYPE;
+        $normalizedActionType = strtolower($rawActionType);
         $callToAction = [
-            'actionType' => ScheduledPost::ACTION_TYPES[$rawActionType]
+            'actionType' => ScheduledPost::ACTION_TYPES[$normalizedActionType]
                 ?? ScheduledPost::ACTION_TYPES[ScheduledPost::LEARN_MORE_ACTION_TYPE],
         ];
 
@@ -48,14 +52,14 @@ readonly class GoogleBusinessLocalPostObjectValue
         }
 
         $alertType = null;
-        if ($rawTopicType === ScheduledPost::ALERT_TYPE) {
+        if ($normalizedTopicType === ScheduledPost::ALERT_TYPE) {
             $rawAlertType = $attributes[ScheduledPost::ALERT_TYPE_COLUMN] ?? ScheduledPost::UNSPECIFIED_ALERT_TYPE;
-            $alertType = ScheduledPost::ALERT_TYPES[$rawAlertType] ?? 'ALERT_TYPE_UNSPECIFIED';
+            $alertType = ScheduledPost::ALERT_TYPES[strtolower($rawAlertType)] ?? 'ALERT_TYPE_UNSPECIFIED';
         }
 
         $event = [];
         if (
-            $rawTopicType === ScheduledPost::EVENT_TYPE
+            $normalizedTopicType === ScheduledPost::EVENT_TYPE
             && ! empty($attributes[ScheduledPost::EVENT_START_DATETIME_COLUMN])
             && ! empty($attributes[ScheduledPost::EVENT_END_DATETIME_COLUMN])
         ) {
@@ -92,7 +96,7 @@ readonly class GoogleBusinessLocalPostObjectValue
         }
 
         $offer = [];
-        if ($rawTopicType === ScheduledPost::OFFER_TYPE) {
+        if ($normalizedTopicType === ScheduledPost::OFFER_TYPE) {
             $offer = [
                 'couponCode'        => $attributes[ScheduledPost::OFFER_COUPON_CODE_COLUMN] ?? '',
                 'redeemOnlineUrl'   => $attributes[ScheduledPost::OFFER_REDEEM_ONLINE_URL_COLUMN] ?? '',
