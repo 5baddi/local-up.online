@@ -35,7 +35,7 @@ class AppLogger
             self::$instance = new self;
 
             self::$client = new Client(
-                new Configuration(env('BUGSNAG_API_KEY'))
+                new Configuration(config('services.bugsnag.api_key', ''))
             );
 
             self::$client->setAppVersion(config('baddi.version'));

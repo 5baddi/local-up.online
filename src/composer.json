@@ -69,7 +69,7 @@
         ],
         "post-install-cmd": [
             "php artisan clear-compiled",
-            "chmod -R 777 public/"
+            "chmod -R 755 public/"
         ]
     },
     "extra": {

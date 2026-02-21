@@ -34,10 +34,8 @@ services:
       MYSQL_DATABASE: "gmb_app"
       MYSQL_USER: "gmb_db_user"
       MYSQL_PASSWORD: "deployer"
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
-      MYSQL_TCP_PORT: 33061
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-P", "3306"]
       interval: 10s
       timeout: 5s
       retries: 5

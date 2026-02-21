@@ -40,6 +40,12 @@ class AuthenticateController extends Controller
                     ->with('error', trans('auth.no_account_registered'));
             }
 
+            if ($user->isBanned()) {
+                return redirect()
+                    ->route('signin')
+                    ->with('error', trans('auth.account_banned'));
+            }
+
             if (! $user->isEmailConfirmed()) {
                 return redirect()
                     ->route('signin')
@@ -52,12 +58,6 @@ class AuthenticateController extends Controller
                     ->route('signin')
                     ->withInput($request->only([User::EMAIL_COLUMN]))
                     ->with('error', trans('auth.incorrect_credentials'));
-            }
-            
-            if ($user->isBanned()) {
-                return redirect()
-                    ->route('signin')
-                    ->with('error', trans('auth.account_banned'));
             }
 
             $authenticateUser = Auth::attempt(['email' => $user->email, 'password' => $request->input(User::PASSWORD_COLUMN)]);
@@ -78,7 +78,7 @@ class AuthenticateController extends Controller
                 ->route('dashboard')
                 ->with('success', trans('dashboard.welcome_back', ['name' => strtoupper($user->first_name)]));
         } catch (Throwable $e) {
-            AppLogger::error($e, 'auth:signin', ['playload' => $request->all()]);
+            AppLogger::error($e, 'auth:signin', ['payload' => $request->all()]);
 
             return redirect()
                 ->route('signin')

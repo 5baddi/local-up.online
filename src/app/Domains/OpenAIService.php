@@ -53,7 +53,7 @@ class OpenAIService extends Service
                 $payload['user'] = $userId;
             }
 
-            $response = $this->client->post(self::TEXT_GENERATION_ENDPOINT, ['body' => json_encode($payload)]);
+            $response = $this->client->post(self::TEXT_GENERATION_ENDPOINT, ['json' => $payload]);
             $results = json_decode($response->getBody()->getContents(), true);
 
             if ($response->getStatusCode() !== 200 || ! Arr::has($results, ['choices'])) {
