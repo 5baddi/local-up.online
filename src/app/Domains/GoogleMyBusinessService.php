@@ -39,11 +39,12 @@ class GoogleMyBusinessService extends Service
     public function __construct(
         private readonly ?string $accessToken = null,
         private ?string $accountId = null,
-        private readonly ?string $mainLocationId = null
+        private readonly ?string $mainLocationId = null,
+        ?Client $client = null
     ) {
         parent::__construct();
 
-        $this->configure();
+        $this->client = $client ?? $this->makeClient();
     }
 
     public function getBusinessAccounts(
@@ -242,9 +243,7 @@ class GoogleMyBusinessService extends Service
 
         $response = $this->client->post(
             sprintf(self::LOCATION_MEDIA_ENDPOINT, $this->accountId, $this->mainLocationId),
-            [
-                'body'  => json_encode($media),
-            ]
+            ['json' => $media]
         );
 
         $results = json_decode($response->getBody()->getContents(), true);
@@ -358,11 +357,7 @@ class GoogleMyBusinessService extends Service
                     $this->mainLocationId,
                     $id
                 ),
-                [
-                    'body' => json_encode([
-                        'comment' => $reply,
-                    ]),
-                ]
+                ['json' => ['comment' => $reply]]
             );
 
             $results = json_decode($response->getBody()->getContents(), true);
@@ -394,7 +389,7 @@ class GoogleMyBusinessService extends Service
 
         $response = $this->client->post(
             sprintf(self::LOCATION_POSTS_ENDPOINT, $this->accountId, $this->mainLocationId),
-            ['body' => json_encode($values->toArray())]
+            ['json' => $values->toArray()]
         );
 
         $results = json_decode($response->getBody()->getContents(), true);
@@ -423,9 +418,9 @@ class GoogleMyBusinessService extends Service
         return $this;
     }
 
-    private function configure(): void
+    private function makeClient(): Client
     {
-        $this->client = new Client([
+        return new Client([
             'base_uri'          => self::BASE_API_URI,
             'debug'             => false,
             'http_errors'       => false,
