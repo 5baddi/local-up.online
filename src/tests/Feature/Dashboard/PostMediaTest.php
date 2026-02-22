@@ -59,7 +59,7 @@ describe('Upload Scheduled Post Media – Validation', function () {
         $uuid = \Illuminate\Support\Str::uuid()->toString();
 
         $this->actingAs($user)
-            ->post(route('dashboard.scheduled.posts.upload.media', ['id' => $uuid]))
+            ->postJson(route('dashboard.scheduled.posts.upload.media', ['id' => $uuid]))
             ->assertStatus(422);
     });
 });
@@ -113,9 +113,11 @@ describe('Delete Scheduled Post Media – Success', function () {
         $postId = \Illuminate\Support\Str::uuid()->toString();
 
         ScheduledPost::create([
-            ScheduledPost::ID_COLUMN        => $postId,
-            ScheduledPost::USER_ID_COLUMN   => $user->getId(),
-            ScheduledPost::STATE_COLUMN     => ScheduledPost::UNSPECIFIED_STATE,
+            ScheduledPost::ID_COLUMN           => $postId,
+            ScheduledPost::USER_ID_COLUMN      => $user->getId(),
+            ScheduledPost::ACCOUNT_ID_COLUMN   => 'acc-media-123',
+            ScheduledPost::LOCATION_ID_COLUMN  => 'loc-media-456',
+            ScheduledPost::STATE_COLUMN        => ScheduledPost::UNSPECIFIED_STATE,
         ]);
 
         ScheduledPostMedia::create([
@@ -145,7 +147,7 @@ describe('Upload Scheduled Media – Validation', function () {
         $user = userWithGmbForMedia();
 
         $this->actingAs($user)
-            ->post(route('dashboard.media.upload'))
+            ->postJson(route('dashboard.media.upload'))
             ->assertStatus(422);
     });
 
@@ -155,7 +157,7 @@ describe('Upload Scheduled Media – Validation', function () {
         $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
 
         $this->actingAs($user)
-            ->post(route('dashboard.media.upload'), ['file' => [$file]])
+            ->post(route('dashboard.media.upload'), ['file' => [$file]], ['Accept' => 'application/json'])
             ->assertStatus(422);
     });
 });

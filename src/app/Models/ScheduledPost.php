@@ -85,8 +85,10 @@ class ScheduledPost extends ModelEntity
         self::CALL_ACTION_TYPE          => 'CALL',
     ];
 
-    protected $dates = [
-        self::SCHEDULED_AT_COLUMN,
+    protected $casts = [
+        self::SCHEDULED_AT_COLUMN           => 'datetime',
+        self::EVENT_START_DATETIME_COLUMN   => 'datetime',
+        self::EVENT_END_DATETIME_COLUMN     => 'datetime',
     ];
 
     public const string DEFAULT_LANGUAGE_CODE = 'en-US';

@@ -20,7 +20,7 @@ class AiGenerateTextRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'prompt'    => ['string'],
+            'prompt'    => ['nullable', 'string'],
             'topic'     => ['string', 'min:1'],
         ];
     }
