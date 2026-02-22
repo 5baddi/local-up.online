@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use BADDIServices\ClnkGO\Models\ScheduledPostMedia;
 use BADDIServices\ClnkGO\Http\Controllers\DashboardController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DeleteScheduledPostMediaController extends DashboardController
 {
@@ -28,7 +29,9 @@ class DeleteScheduledPostMediaController extends DashboardController
                     sprintf('uploads/%s', $request->input('filename'))
                 )
                 ->forceDelete();
-        } catch (Throwable){
+        } catch (HttpException $e) {
+            throw $e;
+        } catch (Throwable) {
             abort(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
