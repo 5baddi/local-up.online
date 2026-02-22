@@ -1,0 +1,110 @@
+# Render.com Blueprint — https://render.com/docs/blueprint-spec
+# Free tier: 1 web service (750 hrs/month) + 1 PostgreSQL instance (1 GB storage)
+#
+# Usage:
+#   1. Push this repo to GitHub / GitLab.
+#   2. Go to https://dashboard.render.com → New → Blueprint.
+#   3. Connect the repo — Render will read this file automatically.
+#   4. Add any secret env vars (APP_KEY, BUGSNAG_API_KEY, …) in the dashboard.
+
+services:
+  - type: web
+    name: local-up-web
+    env: docker
+    plan: free
+    # Render builds from the Dockerfile at the repo root
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Restart automatically on failure
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      # ── Application ──────────────────────────────────────────────────────────
+      - key: APP_NAME
+        value: LOCAL-UP
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_LOCALE
+        value: fr
+      # Render injects the public URL automatically; override here if needed.
+      - key: APP_URL
+        fromService:
+          type: web
+          name: local-up-web
+          property: host
+      - key: SAAS_URL
+        fromService:
+          type: web
+          name: local-up-web
+          property: host
+      # Generate a secure random key — set manually if you need a fixed value.
+      - key: APP_KEY
+        generateValue: true
+
+      # ── Logging ──────────────────────────────────────────────────────────────
+      # Write logs to stderr so Render captures them in its log viewer.
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      # Set BUGSNAG_API_KEY as a secret in the Render dashboard if you use it.
+      - key: BUGSNAG_API_KEY
+        value: ""
+
+      # ── Database (Render managed PostgreSQL — free) ───────────────────────────
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: local-up-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: local-up-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: local-up-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: local-up-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: local-up-db
+          property: password
+
+      # ── Cache / Session / Queue ───────────────────────────────────────────────
+      # Render free tier does not include Memcached; fall back to file cache.
+      # Upgrade to a paid plan and add a Redis/Memcached add-on to re-enable.
+      - key: CACHE_DRIVER
+        value: file
+      - key: CACHE_FEATURE_ENABLED
+        value: false
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: BROADCAST_DRIVER
+        value: log
+
+      # ── Security features (disabled until keys are configured) ────────────────
+      - key: HCAPTCHA_FEATURE_ENABLED
+        value: false
+      - key: ADMINER_ENABLED
+        value: false
+      - key: ADMINER_AUTO_LOGIN
+        value: false
+
+databases:
+  - name: local-up-db
+    plan: free
+    databaseName: localup
+    user: localup
+    # Render free PostgreSQL: 1 GB storage, auto-suspended after 90 days of inactivity.
+    # Upgrade to Starter ($7/month) for persistent storage and no suspension.
