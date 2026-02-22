@@ -29,9 +29,11 @@ class UploadScheduledPostMediaController extends DashboardController
                 ->firstOrCreate(
                     [ScheduledPost::ID_COLUMN => $id],
                     [
-                        ScheduledPost::ID_COLUMN        => $id,
-                        ScheduledPost::USER_ID_COLUMN   => $this->user->getId(),
-                        ScheduledPost::STATE_COLUMN     => ScheduledPost::UNSPECIFIED_STATE,
+                        ScheduledPost::ID_COLUMN          => $id,
+                        ScheduledPost::USER_ID_COLUMN     => $this->user->getId(),
+                        ScheduledPost::ACCOUNT_ID_COLUMN  => $this->user->googleCredentials->getAccountId(),
+                        ScheduledPost::LOCATION_ID_COLUMN => $this->user->googleCredentials->getMainLocationId(),
+                        ScheduledPost::STATE_COLUMN       => ScheduledPost::UNSPECIFIED_STATE,
                     ]
                 );
 

@@ -113,9 +113,11 @@ describe('Delete Scheduled Post Media – Success', function () {
         $postId = \Illuminate\Support\Str::uuid()->toString();
 
         ScheduledPost::create([
-            ScheduledPost::ID_COLUMN        => $postId,
-            ScheduledPost::USER_ID_COLUMN   => $user->getId(),
-            ScheduledPost::STATE_COLUMN     => ScheduledPost::UNSPECIFIED_STATE,
+            ScheduledPost::ID_COLUMN          => $postId,
+            ScheduledPost::USER_ID_COLUMN     => $user->getId(),
+            ScheduledPost::ACCOUNT_ID_COLUMN  => 'acc-media-123',
+            ScheduledPost::LOCATION_ID_COLUMN => 'loc-media-456',
+            ScheduledPost::STATE_COLUMN       => ScheduledPost::UNSPECIFIED_STATE,
         ]);
 
         ScheduledPostMedia::create([

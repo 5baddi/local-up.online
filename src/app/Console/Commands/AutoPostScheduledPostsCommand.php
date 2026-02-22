@@ -115,9 +115,9 @@ class AutoPostScheduledPostsCommand extends Command
 
                             $scheduledPost->update([
                                 ScheduledPost::STATE_COLUMN     => strtolower(
-                                    $googleLocalPost[ScheduledPost::STATE_COLUMN] ?? ScheduledPost::REJECTED_STATE
+                                    is_array($googleLocalPost) ? ($googleLocalPost[ScheduledPost::STATE_COLUMN] ?? ScheduledPost::REJECTED_STATE) : ScheduledPost::REJECTED_STATE
                                 ),
-                                ScheduledPost::ONLINE_ID_COLUMN => $googleLocalPost['name'] ?? null,
+                                ScheduledPost::ONLINE_ID_COLUMN => is_array($googleLocalPost) ? ($googleLocalPost['name'] ?? null) : null,
                                 ScheduledPost::REASON_COLUMN    => null,
                             ]);
 

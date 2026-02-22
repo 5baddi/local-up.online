@@ -9,10 +9,20 @@
 namespace BADDIServices\ClnkGO\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Response;
 use BADDIServices\ClnkGO\Models\ScheduledMedia;
 
 class ScheduledMediaRequest extends FormRequest
 {
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            response()->json(['errors' => $validator->errors()], Response::HTTP_UNPROCESSABLE_ENTITY)
+        );
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */

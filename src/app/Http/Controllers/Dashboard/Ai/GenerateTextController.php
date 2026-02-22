@@ -27,7 +27,7 @@ class GenerateTextController extends DashboardController
     public function __invoke(AiGenerateTextRequest $request): JsonResponse
     {
         try {
-            $prompt = $request->input('prompt', '');
+            $prompt = $request->input('prompt') ?? '';
 
             $prompt = in_array($prompt, OpenAIService::SUPPORTED_PROMPTS)
                 ? sprintf('global.%s', $prompt)
@@ -35,7 +35,7 @@ class GenerateTextController extends DashboardController
 
             $choices = $this->openAIService->generateTextCompletions(
                 $prompt,
-                $request->input('topic', ''),
+                $request->input('topic') ?? '',
                 $this->user->getId()
             );
 

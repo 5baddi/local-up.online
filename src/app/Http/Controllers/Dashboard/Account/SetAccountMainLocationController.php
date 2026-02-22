@@ -18,6 +18,7 @@ use BADDIServices\ClnkGO\Models\AccountLocation;
 use BADDIServices\ClnkGO\Models\UserGoogleCredentials;
 use BADDIServices\ClnkGO\Http\Controllers\DashboardController;
 use BADDIServices\ClnkGO\Models\ObjectValues\GoogleCredentialsObjectValue;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class SetAccountMainLocationController extends DashboardController
 {
@@ -55,6 +56,8 @@ class SetAccountMainLocationController extends DashboardController
                     'alert',
                     new Alert('Main location successfully updated.', 'success')
                 );
+        } catch (HttpException $e) {
+            throw $e;
         } catch (Throwable){
             return redirect()->route('dashboard.account', ['tab' => 'emails'])
                 ->with(
