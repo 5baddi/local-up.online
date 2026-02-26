@@ -5,29 +5,35 @@
 @endsection
 
 @section('content')
-    <div class="row g-2 align-items-center">
-        <div class="col">
-            <h2 class="page-title">
-                {{ trans('global.reviews') }}
-            </h2>
-        </div>
-        @if(sizeof($reviews['reviews'] ?? []) > 0)
-        <div class="col-auto ms-auto d-print-none">
-            <div class="btn-list">
-                <span class="form-check-label">{{ trans('global.answered') }}</span>
-                <form action="{{ route('dashboard.reviews') }}">
-                <label class="form-check form-check-single form-switch p-0">
-                  <input name="has_replies" value="1" onchange="this.form.submit()" class="form-check-input pointer-cursor" type="checkbox" @if(request()->boolean('has_replies')) checked @endif/>
-                </label>
-                </form>
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    {{ trans('global.reviews') }}
+                </h2>
+                <div class="text-muted mt-1">{{ sizeof($reviews['reviews'] ?? []) }} {{ Str::lower(trans('global.reviews')) ?? 'reviews' }}</div>
             </div>
+            @if(sizeof($reviews['reviews'] ?? []) > 0)
+            <div class="col-auto ms-auto d-print-none">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="form-check-label text-muted">{{ trans('global.answered') }}</span>
+                    <form action="{{ route('dashboard.reviews') }}">
+                    <label class="form-check form-check-single form-switch p-0 mb-0">
+                      <input name="has_replies" value="1" onchange="this.form.submit()" class="form-check-input pointer-cursor" type="checkbox" @if(request()->boolean('has_replies')) checked @endif/>
+                    </label>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
-        @endif
     </div>
+
     @if(sizeof($reviews['reviews'] ?? []) > 0)
-    <div class="row row-cards mt-2">
-        <div class="space-y" id="reviews-container">
-            @include('dashboard.reviews.partials.list')
+    <div class="row row-cards">
+        <div class="col-12">
+            <div class="space-y" id="reviews-container">
+                @include('dashboard.reviews.partials.list')
+            </div>
         </div>
     </div>
     @else
@@ -35,10 +41,10 @@
     @endif
     @if(! empty($reviews['nextPageToken']))
         <input name="gmb_next" type="hidden" value="{{ $reviews['nextPageToken'] }}"/>
-        <div class="row mt-3">
-            <div class="col">
+        <div class="row mt-4">
+            <div class="col text-center">
                 <a id="load-more-btn" href="javascript:void(0);" onclick="loadMoreReviews()"
-                   class="btn btn-icon btn-clnkgo">
+                   class="btn btn-clnkgo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                          fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -48,7 +54,7 @@
                         <path d="M12 5l0 14"/>
                         <path d="M5 12l14 0"/>
                     </svg>
-                    &nbsp;Charger plus
+                    &nbsp;{{ trans('global.load_more') }}
                 </a>
             </div>
         </div>
