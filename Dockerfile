@@ -10,12 +10,15 @@ RUN apt-get update && apt-get install -y \
     libmemcached-dev \
     libssl-dev \
     libicu-dev \
+    libpq-dev \
     zlib1g-dev \
     --no-install-recommends \
     && docker-php-ext-enable opcache \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
+        pdo_pgsql \
+        pgsql \
         gd \
         zip \
         intl \
@@ -45,3 +48,23 @@ RUN echo "file_uploads = On\n" \
 
 # Enable required Apache modules
 RUN a2enmod rewrite headers
+
+# Copy application source
+COPY src/ /var/www/
+
+# Install PHP dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --working-dir=/var/www
+
+# Set correct ownership and permissions
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 755 /var/www/storage \
+    && chmod -R 755 /var/www/bootstrap/cache
+
+# Copy and configure entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+WORKDIR /var/www
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
