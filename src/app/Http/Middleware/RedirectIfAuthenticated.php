@@ -6,7 +6,6 @@ use Closure;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Providers\RouteServiceProvider;
 use BADDIServices\ClnkGO\Services\UserService;
 
 class RedirectIfAuthenticated
@@ -36,7 +35,7 @@ class RedirectIfAuthenticated
                 /** @var User */
                 $user = Auth::user();
                 
-                return redirect(RouteServiceProvider::HOME)->with('success', 'Welcome back ' . strtoupper($user->first_name));
+                return redirect('/dashboard')->with('success', 'Welcome back ' . strtoupper($user->first_name));
             }
         }
 
