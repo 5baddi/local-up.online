@@ -10,12 +10,17 @@
 @endsection
 
 @section('content')
-    <div class="row row-cards">
-        <div class="col">
-            <div class="card">
-                <div class="card-header d-flex align-items-center">
-                    <h3 class="card-title">{{ trans('dashboard.scheduled_posts') }}</h3>
-                    <div class="ms-auto">
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    {{ trans('dashboard.scheduled_posts') }}
+                </h2>
+                <div class="text-muted mt-1">{{ $scheduledPosts->total() ?? 0 }} {{ Str::lower(trans('dashboard.scheduled_posts')) }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <div class="dropdown">
                         <button data-bs-toggle="dropdown" type="button" class="btn btn-clnkgo dropdown-toggle"
                                 aria-expanded="false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -27,7 +32,7 @@
                             </svg>
                             &nbsp;{{ trans('global.create_new') }}
                         </button>
-                        <div class="dropdown-menu dropdown-menu-end" style="">
+                        <div class="dropdown-menu dropdown-menu-end">
                             <a class="dropdown-item"
                                href="{{ route('dashboard.scheduled.posts.edit', ['type' => 'standard']) }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -85,23 +90,30 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cards">
+        <div class="col">
+            <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-vcenter table-mobile-md card-table">
+                    <table class="table table-vcenter table-mobile-md card-table table-hover">
                         <thead>
                         <tr>
                             <th>{{ trans('dashboard.event.type') }}</th>
                             <th>{{ trans('dashboard.event.summary') }}</th>
                             <th>{{ trans('dashboard.event.cta') }}</th>
                             <th>{{ trans('dashboard.event.scheduled_at') }}</th>
-                            <th>État</th>
+                            <th>{{ trans('global.status') ?? 'Status' }}</th>
                             <th class="w-1"></th>
                         </tr>
                         </thead>
                         <tbody>
                         @if($scheduledPosts->count() === 0)
                             <tr>
-                                <td colspan="5"
-                                    class="text-center">{{ trans('dashboard.no_scheduled_posts_found') }}</td>
+                                <td colspan="6"
+                                    class="text-center text-muted py-4">{{ trans('dashboard.no_scheduled_posts_found') }}</td>
                             </tr>
                         @else
                             @foreach($scheduledPosts as $scheduledPost)
@@ -109,23 +121,25 @@
                                     @continue
                                 @endif
                                 <tr>
-                                    <td>{{ Str::ucfirst(Str::lower(($scheduledPost->topic_type ?? '---'))) }}</td>
-                                    <td>{{ substr($scheduledPost->summary ?? '---', 0, 50) }}</td>
-                                    <td>{{ Str::ucfirst(Str::lower(Str::replace('_', ' ', $scheduledPost->action_type ?? 'LEARN_MORE'))) }}</td>
-                                    <td>{{ $scheduledPost->scheduled_at?->setTimezone(session('timezone', 'UTC'))->format('d M Y H:i') }}</td>
                                     <td>
-                                        <div class="flex-nowrap">
-                                            @switch(Str::lower($scheduledPost->state ?? '---'))
-                                                @case('rejected')
-                                                    <span class="badge bg-danger text-danger-fg cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ Str::ucfirst(Str::lower($scheduledPost->reason ?? '---'))  }}">{{ trans('global.rejected') }}</span>
-                                                    @break
-                                                @case('unspecified')
-                                                    <span class="badge bg-orange text-orange-fg">{{ trans('global.pending') }}</span>
-                                                    @break
-                                                @default
-                                                    <span class="badge bg-green text-green-fg">{{ trans('global.posted') }}</span>
-                                            @endswitch
-                                        </div>
+                                        <span class="badge bg-secondary-lt">{{ Str::ucfirst(Str::lower(($scheduledPost->topic_type ?? '---'))) }}</span>
+                                    </td>
+                                    <td class="text-muted">{{ substr($scheduledPost->summary ?? '---', 0, 50) }}</td>
+                                    <td>{{ Str::ucfirst(Str::lower(Str::replace('_', ' ', $scheduledPost->action_type ?? 'LEARN_MORE'))) }}</td>
+                                    <td>
+                                        <span class="text-nowrap">{{ $scheduledPost->scheduled_at?->setTimezone(session('timezone', 'UTC'))->format('d M Y H:i') }}</span>
+                                    </td>
+                                    <td>
+                                        @switch(Str::lower($scheduledPost->state ?? '---'))
+                                            @case('rejected')
+                                                <span class="badge bg-danger text-danger-fg cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ Str::ucfirst(Str::lower($scheduledPost->reason ?? '---'))  }}">{{ trans('global.rejected') }}</span>
+                                                @break
+                                            @case('unspecified')
+                                                <span class="badge bg-orange text-orange-fg">{{ trans('global.pending') }}</span>
+                                                @break
+                                            @default
+                                                <span class="badge bg-green text-green-fg">{{ trans('global.posted') }}</span>
+                                        @endswitch
                                     </td>
                                     <td>
                                         <div class="btn-list flex-nowrap">

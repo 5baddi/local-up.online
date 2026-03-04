@@ -10,46 +10,61 @@
 @endsection
 
 @section('content')
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="mb-1">
+                    <a href="{{ route('dashboard.media') }}" class="text-muted text-decoration-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/></svg>
+                        {{ trans('dashboard.photos') }}
+                    </a>
+                </div>
+                <h2 class="page-title">
+                    {{ trans('global.scheduled_media') }}
+                </h2>
+                <div class="text-muted mt-1">{{ $scheduledMedia->total() ?? 0 }} {{ Str::lower(trans('global.scheduled_media')) ?? 'scheduled media' }}</div>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="{{ route('dashboard.media.new') }}" class="btn btn-clnkgo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-upload">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                        <path d="M7 9l5 -5l5 5" />
+                        <path d="M12 4l0 12" />
+                    </svg>
+                    &nbsp;{{ trans('global.upload_new_media') }}
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="row row-cards">
         <div class="col">
             <div class="card">
-                <div class="card-header d-flex align-items-center">
-                    <h3 class="card-title">{{ trans('global.scheduled_media') }}</h3>
-                    <div class="ms-auto">
-                        <a href="{{ route('dashboard.media.new') }}" class="btn btn-clnkgo btn-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-upload">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                                <path d="M7 9l5 -5l5 5" />
-                                <path d="M12 4l0 12" />
-                            </svg>
-                            &nbsp;{{ trans('global.upload_new_media') }}
-                        </a>
-                    </div>
-                </div>
                 <div class="table-responsive">
-                    <table class="table table-vcenter table-mobile-md card-table">
+                    <table class="table table-vcenter table-mobile-md card-table table-hover">
                         <thead>
                             <tr>
                                 <th>{{ trans('global.frequency') }}</th>
                                 <th>{{ trans('global.media') }}</th>
                                 <th>{{ trans('dashboard.event.scheduled_at') }}</th>
-                                <th>État</th>
+                                <th>{{ trans('global.status') ?? 'Status' }}</th>
                                 <th class="w-1"></th>
                             </tr>
                         </thead>
                         <tbody>
                             @if ($scheduledMedia->count() === 0)
                                 <tr>
-                                    <td colspan="5" class="text-center">{{ trans('global.no_scheduled_media_found') }}
-                                    </td>
+                                    <td colspan="5" class="text-center text-muted py-4">{{ trans('global.no_scheduled_media_found') }}</td>
                                 </tr>
                             @else
                                 @foreach ($scheduledMedia as $media)
                                     <tr>
-                                        <td>{{ trans(sprintf('global.%s', $media->scheduled_frequency ?? 'instantly')) }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary-lt">{{ trans(sprintf('global.%s', $media->scheduled_frequency ?? 'instantly')) }}</span>
+                                        </td>
                                         <td>
                                             <div class="avatar-list avatar-list-stacked">
                                                 @php($files = array_slice($media->files ?? [], 0, 5))
@@ -65,27 +80,24 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>{{ $media->scheduled_at?->setTimezone(session('timezone', 'UTC'))->format('d M Y H:i') }}
+                                        <td>
+                                            <span class="text-nowrap">{{ $media->scheduled_at?->setTimezone(session('timezone', 'UTC'))->format('d M Y H:i') }}</span>
                                         </td>
                                         <td>
-                                            <div class="flex-nowrap">
-                                                @switch(Str::lower($media->state ?? '---'))
-                                                    @case('rejected')
-                                                        <span class="badge bg-danger text-danger-fg cursor-pointer"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="{{ Str::ucfirst(Str::lower($media->reason ?? '---')) }}">{{ trans('global.rejected') }}</span>
-                                                    @break
+                                            @switch(Str::lower($media->state ?? '---'))
+                                                @case('rejected')
+                                                    <span class="badge bg-danger text-danger-fg cursor-pointer"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="{{ Str::ucfirst(Str::lower($media->reason ?? '---')) }}">{{ trans('global.rejected') }}</span>
+                                                @break
 
-                                                    @case('unspecified')
-                                                        <span
-                                                            class="badge bg-orange text-orange-fg">{{ trans('global.pending') }}</span>
-                                                    @break
+                                                @case('unspecified')
+                                                    <span class="badge bg-orange text-orange-fg">{{ trans('global.pending') }}</span>
+                                                @break
 
-                                                    @default
-                                                        <span
-                                                            class="badge bg-green text-green-fg">{{ trans('global.posted') }}</span>
-                                                @endswitch
-                                            </div>
+                                                @default
+                                                    <span class="badge bg-green text-green-fg">{{ trans('global.posted') }}</span>
+                                            @endswitch
                                         </td>
                                         <td>
                                             <div class="btn-list flex-nowrap">

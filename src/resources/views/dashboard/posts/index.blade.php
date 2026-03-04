@@ -5,16 +5,27 @@
 @endsection
 
 @section('content')
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <h2 class="page-title">
+                    {{ trans('dashboard.posts') }}
+                </h2>
+                <div class="text-muted mt-1">{{ trans('global.manage_your_content') ?? 'Manage your Google My Business posts' }}</div>
+            </div>
+        </div>
+    </div>
+
     @if(sizeof($posts ?? []) > 0)
-        <div class="row row-cards row-deck" id="posts-container">
+        <div class="row row-cards" id="posts-container">
             @include('dashboard.posts.partials.gallery')
         </div>
         @if(! empty($posts['nextPageToken']))
             <input name="gmb_next" type="hidden" value="{{ $posts['nextPageToken'] }}"/>
-            <div class="row mt-3">
-                <div class="col">
+            <div class="row mt-4">
+                <div class="col text-center">
                     <a id="load-more-btn" href="javascript:void(0);" onclick="loadMorePosts()"
-                       class="btn btn-icon btn-clnkgo">
+                       class="btn btn-clnkgo">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                              fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round"
