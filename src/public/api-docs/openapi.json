@@ -1,0 +1,1662 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "LOCAL-UP (ClnkGO) API",
+    "description": "API documentation for LOCAL-UP — a Google My Business location management platform. Provides endpoints for authentication, account management, scheduled posts, media, reviews, and AI text generation.\n\n**Authentication:** All dashboard endpoints require an active session (cookie-based). Obtain a session by signing in via `POST /auth/signin`. CSRF protection is enforced on all mutating requests — include the `X-CSRF-TOKEN` header (value from the `XSRF-TOKEN` cookie) or the `_token` form field.\n\n**Copyright:** [BADDI Services](https://baddi.info)",
+    "version": "1.0.0",
+    "contact": {
+      "name": "BADDI Services",
+      "url": "https://baddi.info",
+      "email": "services@baddi.info"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Sign in and sign out"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard overview and statistics"
+    },
+    {
+      "name": "Account",
+      "description": "User profile and Google My Business account management"
+    },
+    {
+      "name": "Posts",
+      "description": "Google My Business live post viewing"
+    },
+    {
+      "name": "Scheduled Posts",
+      "description": "Create, edit, and delete scheduled GMB posts"
+    },
+    {
+      "name": "Media",
+      "description": "Direct media upload to Google My Business"
+    },
+    {
+      "name": "Scheduled Media",
+      "description": "Create and manage scheduled media uploads"
+    },
+    {
+      "name": "Reviews",
+      "description": "List and reply to Google My Business reviews"
+    },
+    {
+      "name": "AI",
+      "description": "AI-powered text generation (OpenAI GPT-4 Turbo)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "local_up_session",
+        "description": "Laravel session cookie. Obtained after a successful sign-in."
+      },
+      "csrfToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-TOKEN",
+        "description": "CSRF token. Read the value from the `XSRF-TOKEN` cookie set by Laravel and send it in this header for all mutating requests."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Unauthenticated."
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "The email field is required."
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "email": ["The email field is required."],
+              "password": ["The password field is required."]
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "example": "+33612345678"
+          },
+          "role": {
+            "type": "string",
+            "example": "user"
+          },
+          "is_superadmin": {
+            "type": "boolean",
+            "example": false
+          },
+          "banned": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "AccountLocation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "account_id": {
+            "type": "string",
+            "example": "accounts/123456789"
+          },
+          "location_id": {
+            "type": "string",
+            "example": "locations/987654321"
+          },
+          "title": {
+            "type": "string",
+            "example": "My Business Location"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ScheduledPost": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "account_id": {
+            "type": "string",
+            "example": "accounts/123456789"
+          },
+          "location_id": {
+            "type": "string",
+            "example": "locations/987654321"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1500,
+            "description": "Post body text"
+          },
+          "topic_type": {
+            "type": "string",
+            "enum": ["STANDARD", "EVENT", "OFFER", "ALERT"],
+            "description": "GMB post type"
+          },
+          "action_type": {
+            "type": "string",
+            "enum": ["UNSPECIFIED", "BOOK", "ORDER", "SHOP", "LEARN_MORE", "SIGN_UP", "GET_OFFER", "CALL"],
+            "description": "Call-to-action button type"
+          },
+          "action_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "URL for the CTA button (omitted for CALL type)"
+          },
+          "language_code": {
+            "type": "string",
+            "example": "fr",
+            "description": "BCP-47 language code"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["UNSPECIFIED", "REJECTED", "LIVE", "PROCESSING"],
+            "description": "Current post state"
+          },
+          "event_title": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 150
+          },
+          "event_start_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "event_end_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "offer_coupon_code": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 150
+          },
+          "offer_redeem_online_url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true
+          },
+          "offer_terms_conditions": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 1000
+          },
+          "alert_type": {
+            "type": "string",
+            "enum": ["UNSPECIFIED", "COVID_19"],
+            "nullable": true
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "When to publish the post. Null means publish immediately."
+          },
+          "online_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "GMB post ID once published"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Rejection reason if state is REJECTED"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledPostMedia"
+            }
+          }
+        }
+      },
+      "ScheduledPostMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scheduled_post_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "description": "Storage path of the media file"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["photo", "video"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public URL to access the media file"
+          }
+        }
+      },
+      "ScheduledMedia": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "account_id": {
+            "type": "string",
+            "example": "accounts/123456789"
+          },
+          "location_id": {
+            "type": "string",
+            "example": "locations/987654321"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of storage paths for uploaded media files"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["UNSPECIFIED", "REJECTED", "LIVE", "PROCESSING"]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduled_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduled_frequency": {
+            "type": "string",
+            "enum": ["daily", "3_days", "weekly"],
+            "nullable": true,
+            "description": "Recurring schedule frequency"
+          }
+        }
+      },
+      "GmbPost": {
+        "type": "object",
+        "description": "A Google My Business post as returned by the GMB API",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "accounts/123/locations/456/localPosts/789"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "topicType": {
+            "type": "string",
+            "enum": ["STANDARD", "EVENT", "OFFER", "ALERT"]
+          },
+          "state": {
+            "type": "string",
+            "enum": ["LIVE", "REJECTED", "PROCESSING"]
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GmbReview": {
+        "type": "object",
+        "description": "A Google My Business review",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "accounts/123/locations/456/reviews/789"
+          },
+          "reviewId": {
+            "type": "string"
+          },
+          "reviewer": {
+            "type": "object",
+            "properties": {
+              "displayName": {
+                "type": "string"
+              },
+              "isAnonymous": {
+                "type": "boolean"
+              }
+            }
+          },
+          "starRating": {
+            "type": "string",
+            "enum": ["ONE", "TWO", "THREE", "FOUR", "FIVE"]
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reviewReply": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "comment": {
+                "type": "string"
+              },
+              "updateTime": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "SignInRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "secret"
+          },
+          "h-captcha-response": {
+            "type": "string",
+            "description": "hCaptcha response token (required when hCaptcha feature is enabled)"
+          },
+          "timezone": {
+            "type": "string",
+            "nullable": true,
+            "example": "Europe/Paris"
+          }
+        }
+      },
+      "UpdateAccountRequest": {
+        "type": "object",
+        "required": ["first_name", "last_name"],
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "minLength": 1,
+            "example": "Doe"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 25,
+            "example": "+33612345678"
+          },
+          "current_password": {
+            "type": "string",
+            "description": "Required when changing password"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "New password (required with current_password)"
+          },
+          "confirm_password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Must match new password"
+          },
+          "emails": {
+            "type": "string",
+            "nullable": true,
+            "description": "Comma-separated notification emails"
+          }
+        }
+      },
+      "ScheduledPostStandardRequest": {
+        "type": "object",
+        "required": ["summary", "action_type", "action_url"],
+        "properties": {
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1500,
+            "description": "Post body text"
+          },
+          "action_type": {
+            "type": "string",
+            "enum": ["UNSPECIFIED", "BOOK", "ORDER", "SHOP", "LEARN_MORE", "SIGN_UP", "GET_OFFER", "CALL"],
+            "description": "Call-to-action type"
+          },
+          "action_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "CTA URL (not required for CALL type)"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Publication date (null = publish immediately)"
+          },
+          "scheduled_time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "nullable": true,
+            "example": "09:00",
+            "description": "Publication time in HH:MM format"
+          }
+        }
+      },
+      "ScheduledPostEventRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduledPostStandardRequest" },
+          {
+            "type": "object",
+            "required": ["event_title", "event_start_date", "event_end_date"],
+            "properties": {
+              "event_title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 150
+              },
+              "event_start_date": {
+                "type": "string",
+                "format": "date"
+              },
+              "event_start_time": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "nullable": true
+              },
+              "event_end_date": {
+                "type": "string",
+                "format": "date"
+              },
+              "event_end_time": {
+                "type": "string",
+                "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "ScheduledPostOfferRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduledPostStandardRequest" },
+          {
+            "type": "object",
+            "properties": {
+              "offer_coupon_code": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 150
+              },
+              "offer_redeem_online_url": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              },
+              "offer_terms_conditions": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 1000
+              }
+            }
+          }
+        ]
+      },
+      "ScheduledPostAlertRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduledPostStandardRequest" },
+          {
+            "type": "object",
+            "required": ["alert_type"],
+            "properties": {
+              "alert_type": {
+                "type": "string",
+                "enum": ["UNSPECIFIED", "COVID_19"]
+              }
+            }
+          }
+        ]
+      },
+      "ScheduledMediaRequest": {
+        "type": "object",
+        "required": ["file"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Existing scheduled media ID for update"
+          },
+          "file": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "Media files (images or videos). Max 75 MB each. Accepted formats: JPEG, PNG, GIF, BMP, TIFF, WebP, MP4, MOV, AVI, MPEG, WMV"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "scheduled_time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "nullable": true,
+            "example": "08:00"
+          },
+          "scheduled_frequency": {
+            "type": "string",
+            "enum": ["daily", "3_days", "weekly"],
+            "nullable": true
+          }
+        }
+      },
+      "AiGenerateTextRequest": {
+        "type": "object",
+        "required": ["topic"],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "nullable": true,
+            "description": "Prompt key (one of the supported prompts) or a custom prompt string"
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The subject or topic for text generation"
+          }
+        }
+      },
+      "AiGenerateTextResponse": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "AI-generated text content",
+            "example": "Découvrez notre nouvelle offre exceptionnelle ce week-end..."
+          }
+        }
+      },
+      "ReviewReplyRequest": {
+        "type": "object",
+        "properties": {
+          "reply": {
+            "type": "string",
+            "description": "Reply text to post on the review"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthenticated": {
+        "description": "Unauthenticated — session cookie missing or expired",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden — insufficient permissions",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Validation failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationErrorResponse"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    { "sessionCookie": [] },
+    { "csrfToken": [] }
+  ],
+  "paths": {
+    "/signin": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Show sign-in page",
+        "description": "Returns the sign-in HTML page. Only accessible to unauthenticated (guest) users.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Sign-in page HTML"
+          },
+          "302": {
+            "description": "Redirect to dashboard if already authenticated"
+          }
+        }
+      }
+    },
+    "/auth/signin": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate user",
+        "description": "Validates credentials and creates an authenticated session. hCaptcha verification may be required based on server configuration.",
+        "security": [{ "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to dashboard on success, or back to sign-in on failure"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Sign out",
+        "description": "Invalidates the current session and redirects to the sign-in page.",
+        "responses": {
+          "302": {
+            "description": "Redirect to sign-in page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Dashboard overview",
+        "description": "Returns the dashboard page displaying GMB posts for the user's main location. Supports token-based pagination via the `Gmb-Next` response header.",
+        "parameters": [
+          {
+            "name": "nextToken",
+            "in": "query",
+            "description": "Pagination token from a previous response (`Gmb-Next` header)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard HTML page",
+            "headers": {
+              "Gmb-Next": {
+                "description": "Token for fetching the next page of GMB posts",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "302": {
+            "description": "Redirect to GMB authentication error page if credentials are missing or expired"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Dashboard"],
+        "summary": "Filtered dashboard view",
+        "description": "Filters the dashboard post list. Same as GET /dashboard but accepts filter parameters.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nextToken": {
+                    "type": "string",
+                    "description": "Pagination token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Filtered dashboard HTML page",
+            "headers": {
+              "Gmb-Next": {
+                "description": "Token for fetching the next page",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/account": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "View account settings",
+        "description": "Returns the account settings page showing profile and connected GMB account information.",
+        "responses": {
+          "200": {
+            "description": "Account settings HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Account"],
+        "summary": "Update account profile",
+        "description": "Updates the authenticated user's profile information. To change the password, provide `current_password`, `password`, and `confirm_password`.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect back to account settings with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/dashboard/account/gmb/callback": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "Google My Business OAuth callback",
+        "description": "Handles the OAuth2 redirect from Google after the user grants GMB access. Exchanges the authorization code for tokens and stores them. Redirects back to the account page.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": true,
+            "description": "OAuth2 authorization code from Google",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "OAuth2 state parameter for CSRF protection",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to account page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/account/gmb/disconnect": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "Disconnect Google My Business account",
+        "description": "Revokes and removes the stored Google OAuth tokens, disconnecting the GMB account from the user's profile.",
+        "responses": {
+          "302": {
+            "description": "Redirect to account page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/account/locations/main": {
+      "get": {
+        "tags": ["Account"],
+        "summary": "Set main GMB location",
+        "description": "Sets the specified GMB location as the user's primary/main location.",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": true,
+            "description": "Location ID to set as main",
+            "schema": {
+              "type": "string",
+              "example": "locations/987654321"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to account page with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/posts/{accountId}/{locationId}/{postId}": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "View a GMB post",
+        "description": "Retrieves and displays a live Google My Business post by account, location, and post ID.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "path",
+            "required": true,
+            "description": "GMB account identifier (e.g. `123456789`)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": false,
+            "description": "GMB location identifier (e.g. `987654321`)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "postId",
+            "in": "path",
+            "required": false,
+            "description": "GMB local post identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post detail HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/posts/{id}": {
+      "delete": {
+        "tags": ["Posts"],
+        "summary": "Delete a GMB post",
+        "description": "Deletes a live Google My Business post by its ID.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "GMB post identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to dashboard with success or error message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts": {
+      "get": {
+        "tags": ["Scheduled Posts"],
+        "summary": "List scheduled posts",
+        "description": "Returns a paginated list of all scheduled GMB posts for the authenticated user.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled posts list HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts/{type}": {
+      "post": {
+        "tags": ["Scheduled Posts"],
+        "summary": "Create a scheduled post",
+        "description": "Creates a new scheduled GMB post of the specified type. The request body varies by post type:\n- `standard` — basic post with CTA\n- `event` — post with event title and date range\n- `offer` — post with coupon/redeem details\n- `alert` — post with alert type (e.g. COVID_19)",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "description": "Post type",
+            "schema": {
+              "type": "string",
+              "enum": ["standard", "event", "offer", "alert"]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ScheduledPostStandardRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostEventRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostOfferRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostAlertRequest" }
+                ]
+              }
+            },
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ScheduledPostStandardRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostEventRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostOfferRequest" },
+                  { "$ref": "#/components/schemas/ScheduledPostAlertRequest" }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to scheduled posts list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts/{type}/{id}": {
+      "get": {
+        "tags": ["Scheduled Posts"],
+        "summary": "Edit scheduled post form",
+        "description": "Returns the form to create or edit a scheduled post. When `id` is provided, loads the existing post for editing.",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "description": "Post type",
+            "schema": {
+              "type": "string",
+              "enum": ["standard", "event", "offer", "alert"]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": false,
+            "description": "Scheduled post UUID (omit to create a new post)",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled post form HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts/{id}": {
+      "delete": {
+        "tags": ["Scheduled Posts"],
+        "summary": "Delete a scheduled post",
+        "description": "Permanently deletes a scheduled post by its UUID.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Scheduled post UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to scheduled posts list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts/upload/{id}": {
+      "post": {
+        "tags": ["Scheduled Posts"],
+        "summary": "Upload media for a scheduled post",
+        "description": "Uploads one or more media files (images or videos) and attaches them to an existing scheduled post.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Scheduled post UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Media files. Max 75 MB each. Accepted: JPEG, PNG, GIF, BMP, TIFF, WebP, MP4, MOV, AVI, MPEG, WMV"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect back with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/posts/delete/{id}": {
+      "delete": {
+        "tags": ["Scheduled Posts"],
+        "summary": "Delete media from a scheduled post",
+        "description": "Removes a specific media file attachment from a scheduled post.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Scheduled post media UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect back with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/media": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "List media uploads",
+        "description": "Returns the media library page listing all uploaded media items for the user's GMB location.",
+        "responses": {
+          "200": {
+            "description": "Media list HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/media/new": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "New media upload form",
+        "description": "Returns the form page for uploading new media directly to Google My Business.",
+        "responses": {
+          "200": {
+            "description": "Media upload form HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Media"],
+        "summary": "Upload media to GMB",
+        "description": "Uploads media files directly to Google My Business for the user's main location.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "description": "Media files. Max 75 MB each."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to media list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/dashboard/media/{id}": {
+      "delete": {
+        "tags": ["Media"],
+        "summary": "Delete a media item",
+        "description": "Deletes a media item from the GMB location media library.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Media item UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to media list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/media": {
+      "get": {
+        "tags": ["Scheduled Media"],
+        "summary": "List scheduled media",
+        "description": "Returns a paginated list of all scheduled media uploads for the authenticated user.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled media list HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/scheduled/media/{id}": {
+      "get": {
+        "tags": ["Scheduled Media"],
+        "summary": "Edit scheduled media form",
+        "description": "Returns the form to edit an existing scheduled media upload.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Scheduled media UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled media form HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Scheduled Media"],
+        "summary": "Delete scheduled media",
+        "description": "Permanently deletes a scheduled media item.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Scheduled media UUID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to scheduled media list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/dashboard/reviews": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "List GMB reviews",
+        "description": "Returns a paginated list of Google My Business reviews for the user's main location. Supports filtering by reply status.",
+        "parameters": [
+          {
+            "name": "has_replies",
+            "in": "query",
+            "description": "Filter by reply status",
+            "schema": {
+              "type": "string",
+              "enum": ["yes", "no"]
+            }
+          },
+          {
+            "name": "nextToken",
+            "in": "query",
+            "description": "Pagination token from the `Gmb-Next` header of a previous response",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reviews list HTML page",
+            "headers": {
+              "Gmb-Next": {
+                "description": "Token for fetching the next page of reviews",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/dashboard/reviews/{id}": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "View a review",
+        "description": "Returns the detail page for a specific GMB review, including AI-suggested reply options.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Review identifier (GMB review name)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Review detail HTML page"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Reviews"],
+        "summary": "Reply to a review",
+        "description": "Posts or updates a reply to a Google My Business review.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Review identifier (GMB review name)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewReplyRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewReplyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "302": {
+            "description": "Redirect to reviews list with success or error flash message"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/dashboard/ai/generate/text": {
+      "post": {
+        "tags": ["AI"],
+        "summary": "Generate AI text",
+        "description": "Generates marketing text using OpenAI GPT-4 Turbo based on the provided prompt and topic. Useful for generating post summaries, event descriptions, and offer text for GMB posts.",
+        "security": [{ "sessionCookie": [] }, { "csrfToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiGenerateTextRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AiGenerateTextRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully generated text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiGenerateTextResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        }
+      }
+    }
+  }
+}
